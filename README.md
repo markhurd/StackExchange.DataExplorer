@@ -6,8 +6,8 @@ The Stack Exchange [Data Explorer](http://data.stackexchange.com) is a tool for 
 
 ### Prerequisites
 
- - [Visual Studio](http://www.visualstudio.com/) 2010 or later
- - [.NET Framework 4.0](http://www.microsoft.com/en-us/download/details.aspx?id=17851)
+ - [Visual Studio](https://www.visualstudio.com/en-us/visual-studio-homepage-vs.aspx) 2015 or later
+ - [.NET Framework 4.5](https://www.microsoft.com/en-us/download/details.aspx?id=30653)
  - [SQL Server 2010 Express](https://www.microsoft.com/en-us/sqlserver/editions/2012-editions/express.aspx) or later/higher
  - [IIS7](http://www.iis.net/) or later
     - The [URL Rewrite 2.0 extension](http://www.iis.net/downloads/microsoft/url-rewrite) is required for OData endpoint support. If you don't need this, you can comment out the `<rewrite>` section in `web.config`.
@@ -37,22 +37,22 @@ Once done, you'll need to populate the `Sites` table with a record for each site
 
 ### Providing Feedback
 
-  - Submit [bugs](http://meta.stackoverflow.com/questions/ask?tags=data-explorer%20bug), [feature requests](http://meta.stackoverflow.com/questions/ask?tags=data-explorer%20feature-request), and [support questions](http://meta.stackoverflow.com/questions/ask?tags=data-explorer%20support) on [Meta Stack Overflow](http://meta.stackoverflow.com/) or [create a new GitHub issue](https://github.com/StackExchange/StackExchange.DataExplorer/issues/new).
+  - Submit [bugs](http://meta.stackexchange.com/questions/ask?tags=data-explorer%20bug), [feature requests](http://meta.stackexchange.com/questions/ask?tags=data-explorer%20feature-request), and [support questions](http://meta.stackexchange.com/questions/ask?tags=data-explorer%20support) on [Meta Stack Exchange](http://meta.stackexchange.com/) or [create a new GitHub issue](https://github.com/StackExchange/StackExchange.DataExplorer/issues/new).
 
 ## Miscellaneous
 
 ### Third Party Components
 
- - [ASP.NET MVC 3](http://www.asp.net/mvc/mvc3)
+ - [ASP.NET MVC 5](http://www.asp.net/vnext/overview/aspnet-vnext)
  - [MiniProfiler](http://nuget.org/packages/MiniProfiler)
- - [Dapper](https://github.com/SamSaffron/dapper-dot-net)
- - [jQuery 1.7.1](http://jquery.com/)
- - [CodeMirror 2](http://codemirror.net/2/)
- - [SlickGrid](https://github.com/mleibman/SlickGrid)
- - [Flot 0.7](http://www.flotcharts.org/)
+ - [Dapper](https://github.com/StackExchange/dapper-dot-net)
+ - [jQuery](http://jquery.com/)
+ - [CodeMirror](http://codemirror.net/)
+ - [SlickGrid](https://github.com/mleibman/SlickGrid) (currently using [a fork](https://github.com/tms/SlickGrid) for updates)
+ - [Flot](http://www.flotcharts.org/)
  - [Elmah](http://code.google.com/p/elmah/)
  - [Json.NET](http://james.newtonking.com/json)
  - [DotNetOpenAuth](http://www.dotnetopenauth.net/)
  - [reCAPTCHA](https://code.google.com/p/recaptcha/)
 
-For more information, see ["Which tools and technologies are used to build Data Explorer?"](http://meta.stackoverflow.com/questions/51967/which-tools-and-technologies-are-used-to-build-data-explorer)
+For more information, see ["Which tools and technologies are used to build Data Explorer?"](http://meta.stackexchange.com/questions/51967/which-tools-and-technologies-are-used-to-build-data-explorer)

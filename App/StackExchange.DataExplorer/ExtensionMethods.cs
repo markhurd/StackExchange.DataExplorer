@@ -565,7 +565,7 @@ namespace StackExchange.DataExplorer
 
         public static string Pluralize(this string word, int number)
         {
-            // http://meta.stackoverflow.com/questions/61380/inflector-net-not-correctly-attributed-to-andrew-peters-in-stack-exchange-data-ex
+            // http://meta.stackexchange.com/questions/61380/inflector-net-not-correctly-attributed-to-andrew-peters-in-stack-exchange-data-ex
             return (number == 1) ? word : word + "s";
         }
 
@@ -767,5 +767,9 @@ namespace StackExchange.DataExplorer
             return input.Substring(0, index) + replace + input.Substring(index + search.Length);
         }
 
+        public static string Append(this char? input, char? next)
+        {
+            return (input.HasValue ? input.ToString() : "") + (next.HasValue ? next.ToString() : "");
+        }
     }
 }

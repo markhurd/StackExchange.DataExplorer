@@ -6,7 +6,7 @@
 <head>
     @{Site site = Current.Controller.Site;}
     <title>@Html.Raw((string)ViewData["PageTitle"])</title>
-    @if (site != null)
+    @if (site != null && AppSettings.EnableOdata)
     {
         @Html.Raw(string.Format("<link rel=\"odata.service\" title=\"{0} OData Endpoint\" href=\"{1}\"/>", site.LongName, site.ODataEndpoint))
     }
@@ -14,7 +14,7 @@
     
 
     @Styles.Render("~/assets/css/master")
-    @RenderSection("additionalStyles", required: false)
+    @RenderSection("AdditionalStyles", required: false)
 
     @Scripts.Render("~/assets/js/jquery")
     @Scripts.Render("~/assets/js/master")
@@ -87,19 +87,16 @@
                 <a href="/about">help</a>
                 <a href="http://stackexchange.com/sites">sites</a>
                 <a href="http://blog.stackexchange.com">blog</a>
-                <a href="http://chat.meta.stackoverflow.com/rooms/495/data-explorer-discussions">chat</a>
+                <a href="http://chat.stackexchange.com/rooms/13526/sede-stack-exchange-data-explorer">chat</a>
                 <a href="http://data.stackexchange.com">data</a>
                 <a href="http://stackexchange.com/legal">legal</a>
-                <strong><a href="http://meta.stackoverflow.com/contact">contact us</a></strong>
-                <strong><a href="http://meta.stackoverflow.com">feedback</a></strong>
+                <strong><a href="http://meta.stackexchange.com/contact">contact us</a></strong>
+                <strong><a href="http://meta.stackexchange.com">feedback</a></strong>
             </div>
             <div id="copyright">
-                site design / logo &copy; @DateTime.UtcNow.Year stack exchange inc; 
-                user contributions licensed under <a href="http://creativecommons.org/licenses/by-sa/3.0/" rel="license">cc-wiki</a>
+                site design / logo &copy; @DateTime.UtcNow.Year Stack Exchange Inc; 
+                user contributions licensed under <a href="http://creativecommons.org/licenses/by-sa/3.0/" rel="license">cc by-sa 3.0</a>
                 with <a href="http://blog.stackoverflow.com/2009/06/attribution-required/" rel="license">attribution required</a>
-            </div>
-            <div id="footer-flair">
-                <a href="http://creativecommons.org/licenses/by-sa/3.0/" class="cc-wiki-link"></a>
             </div>
             <div id="revision">rev @GlobalApplication.AppRevision</div>
         </div>

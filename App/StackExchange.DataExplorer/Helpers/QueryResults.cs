@@ -4,7 +4,6 @@ using System.IO;
 using System.Text;
 using System.Web;
 using System.Xml;
-using System.Xml.Schema;
 using System.Xml.Xsl;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -73,6 +72,40 @@ namespace StackExchange.DataExplorer.Helpers
         public ResultColumnType Type { get; set; }
     }
 
+    public class MagicResult
+    {
+        public int Id { get; set; }
+        public string Title { get; set; }
+
+        public override string ToString()
+        {
+            return Id.ToString();
+        }
+    }
+
+    public class MagicResultConverter : JsonConverter
+    {
+        public override bool CanConvert(Type objectType)
+        {
+            return typeof(object) == objectType;
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            if (reader.TokenType == JsonToken.StartObject)
+            {
+                return serializer.Deserialize(reader, typeof(MagicResult));
+            }
+
+            return serializer.Deserialize(reader, reader.ValueType);
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            serializer.Serialize(writer, value);
+        }
+    }
+
     public class ResultSet
     {
         public ResultSet()
@@ -86,6 +119,7 @@ namespace StackExchange.DataExplorer.Helpers
         // the position of the message when we started rendering this result set
         //  required so we can render in text
         public int MessagePosition { get; set; }
+        public bool Truncated { get; set; }
     }
 
     public class QueryResults
@@ -120,6 +154,7 @@ namespace StackExchange.DataExplorer.Helpers
         public int SiteId { get; set; }
         public string SiteName { get; set; }
         public int QueryId { get; set; }
+        public int TotalResults { get; set; }
         public int MaxResults { get; set; }
         public string FirstRun { get; set; }
         public bool Truncated { get; set; }
@@ -140,7 +175,11 @@ namespace StackExchange.DataExplorer.Helpers
 
         public static JsonSerializerSettings GetSettings()
         {
-            return new JsonSerializerSettings {ContractResolver = new CamelCasePropertyNamesContractResolver()};
+            return new JsonSerializerSettings
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                Converters = new List<JsonConverter> { new MagicResultConverter() }
+            };
         }
 
         public static QueryResults FromJson(string json)
@@ -253,25 +292,18 @@ namespace StackExchange.DataExplorer.Helpers
                 return null;
             }
 
-            var schema = new XmlSchemaSet();
-            schema.Add("http://schemas.microsoft.com/sqlserver/2004/07/showplan", HttpContext.Current.Server.MapPath(@"~/Content/qp/showplanxml.xsd"));
-
-            var settings = new XmlReaderSettings()
-            {
-                ValidationType = ValidationType.Schema,
-                Schemas = schema,
-            };
-
-            using (var reader = System.Xml.XmlReader.Create(new StringReader(plan), settings))
+            using (var reader = XmlReader.Create(new StringReader(plan)))
             {
                 XslCompiledTransform t = new XslCompiledTransform(true);
                 t.Load(HttpContext.Current.Server.MapPath(@"~/Content/qp/qp.xslt"));
 
                 StringBuilder returnValue = new StringBuilder();
-                using (var writer = System.Xml.XmlWriter.Create(returnValue, t.OutputSettings))
+
+                using (var writer = XmlWriter.Create(returnValue, t.OutputSettings))
                 {
                     t.Transform(reader, writer);
                 }
+
                 return returnValue.ToString();
             }
         }

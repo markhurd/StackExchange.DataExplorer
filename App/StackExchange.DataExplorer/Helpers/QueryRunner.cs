@@ -13,8 +13,6 @@ namespace StackExchange.DataExplorer.Helpers
 {
     public class QueryRunner
     {
-        private const int MAX_RESULTS = 50000;
-
         private static readonly Dictionary<string, Func<SqlConnection, IEnumerable<object>, List<object>>> magic_columns
             = GetMagicColumns();
 
@@ -111,9 +109,9 @@ namespace StackExchange.DataExplorer.Helpers
             {
                 sites = sites.Where(s => !s.Url.Contains("meta.") && !s.Url.Contains("stackoverflow.")).ToList();
             }
-            else if (parsedQuery.TargetSites == TargetSites.AllMetaSitesButMSO)
+            else if (parsedQuery.TargetSites == TargetSites.AllMetaSitesButMSE)
             {
-                sites = sites.Where(s => s.Url.Contains("meta.") && !s.Url.Contains("stackoverflow.")).ToList();
+                sites = sites.Where(s => s.Url.Contains("meta.") && s.Url != "http://meta.stackexchange.com").ToList();
             }
 
             var firstSite = sites.First();
@@ -372,17 +370,8 @@ namespace StackExchange.DataExplorer.Helpers
                             plan.AppendStatementPlan(reader[0].ToString());
                         }
                     }
-                    else
+                    else if (reader.FieldCount != 0)
                     {
-                        if (reader.FieldCount == 0)
-                        {
-                            if (reader.RecordsAffected >= 0)
-                            {
-                                messages.AppendFormat("({0} row(s) affected)\n\n", reader.RecordsAffected);
-                            }
-                            continue;
-                        }
-
                         var resultSet = new ResultSet();
                         resultSet.MessagePosition = messages.Length;
                         results.ResultSets.Add(resultSet);
@@ -400,17 +389,18 @@ namespace StackExchange.DataExplorer.Helpers
                             resultSet.Columns.Add(columnInfo);
                         }
 
-                        int currentRow = 0;
+                        int currentRow = 0, totalRows = results.TotalResults;
+
                         while (reader.Read())
                         {
-                            if (currentRow++ >= MAX_RESULTS)
+                            if (++currentRow > AppSettings.MaxResultsPerResultSet || totalRows + currentRow > AppSettings.MaxTotalResults)
                             {
-                                results.Truncated = true;
-                                results.MaxResults = MAX_RESULTS;
+                                resultSet.Truncated = true;
+
                                 break;
                             }
+
                             var row = new List<object>();
-                            resultSet.Rows.Add(row);
 
                             for (int i = 0; i < reader.FieldCount; i++)
                             {
@@ -427,24 +417,32 @@ namespace StackExchange.DataExplorer.Helpers
 
                                 row.Add(col);
                             }
+
+                            resultSet.Rows.Add(row);
                         }
-                        if (results.Truncated)
+
+                        results.TotalResults = totalRows + resultSet.Rows.Count;
+
+                        if (totalRows + currentRow > AppSettings.MaxTotalResults)
                         {
-                            // next result would force ado.net to fast forward
-                            //  through the result set, which is way too slow
+                            results.Truncated = true;
+
+                            // next result would force ado.net to fast forward through the result set, which is way too slow
                             break;
                         }
 
-                        if (reader.RecordsAffected >= 0)
-                        {
-                            messages.AppendFormat("({0} row(s) affected)\n\n", reader.RecordsAffected);
-                        }
+                        messages.AppendFormat("({0} row(s) returned)\n\n", resultSet.Rows.Count);
+                    }
 
-                        messages.AppendFormat("({0} row(s) affected)\n\n", resultSet.Rows.Count);
+                    if (reader.RecordsAffected >= 0)
+                    {
+                        messages.AppendFormat("({0} row(s) affected)\n\n", reader.RecordsAffected);
                     }
                 } while (reader.NextResult());
+
                 command.Cancel();
             }
+
             results.ExecutionPlan = plan.PlanXml;
         }
 
@@ -571,9 +569,10 @@ namespace StackExchange.DataExplorer.Helpers
 
         private static void ProcessMagicColumns(QueryResults results, SqlConnection cnn)
         {
-            int index = 0;
             foreach (ResultSet resultSet in results.ResultSets)
             {
+                int index = 0;
+
                 foreach (ResultColumnInfo column in resultSet.Columns)
                 {
                     if (magic_columns.ContainsKey(column.Name))
@@ -585,10 +584,10 @@ namespace StackExchange.DataExplorer.Helpers
                         {
                             int siteNameIndex = 0;
                             foreach (var item in resultSet.Columns)
-	                        {
-		                        if (item.Type == ResultColumnType.Site) break;
+                            {
+                                if (item.Type == ResultColumnType.Site) break;
                                 siteNameIndex++;
-	                        }
+                            }
 
                             var sites = Current.DB.Sites.All();
                             foreach (var group in resultSet.Rows.GroupBy(r => r[siteNameIndex]))
@@ -604,6 +603,7 @@ namespace StackExchange.DataExplorer.Helpers
                             ProcessColumn(cnn, index, resultSet.Rows, column);
                         }
                     }
+
                     index++;
                 }
             }
@@ -707,10 +707,13 @@ namespace StackExchange.DataExplorer.Helpers
                 {
                     while (reader.Read())
                     {
-                        var extraInfo = new Dictionary<string, object>();
-                        extraInfo["title"] = reader.IsDBNull(1) ? "unknown" : reader.GetString(1);
-                        extraInfo["id"] = reader.GetInt32(0);
-                        linkMap[reader.GetInt32(0)] = extraInfo;
+                        var info = new MagicResult
+                        {
+                            Id = reader.GetInt32(0),
+                            Title = reader.IsDBNull(1) ? "unknown" : reader.GetString(1)
+                        };
+
+                        linkMap[info.Id] = info;
                     }
                 }
             }
